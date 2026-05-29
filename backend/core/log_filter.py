@@ -14,7 +14,7 @@ class SimplifiedLogFilter(logging.Filter):
         r"\[ToolParse\].*原始回复",
         r"prompt preview \(first \d+ chars\)",
         r"feature_config:",
-        r"prompt contains ##TOOL_CALL##",
+        r"prompt contains (?:QNML|legacy|##TOOL_CALL##)",
     ]
 
     # 需要简化的日志模式（保留但精简）

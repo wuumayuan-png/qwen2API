@@ -118,11 +118,15 @@ class QwenExecutor:
         log.info(f"[上游] 功能配置: function_calling={feature_config.get('function_calling')} auto_search={feature_config.get('auto_search')} code_interpreter={feature_config.get('code_interpreter')} plugins_enabled={feature_config.get('plugins_enabled')}")
 
         prompt_content = payload.get("messages", [{}])[0].get("content", "")
-        if "##TOOL_CALL##" in prompt_content:
-            log.info(f"[上游] prompt 包含 ##TOOL_CALL## 标记（正常）")
+        tool_marker_present = any(
+            marker in prompt_content
+            for marker in ("<|QNML|tool_calls", "<|QNML|invoke", "<tool_calls", "<invoke", "##TOOL_CALL##")
+        )
+        if tool_marker_present:
+            log.info("[Upstream] prompt contains QNML/legacy tool markers")
         else:
-            log.warning(f"[上游] prompt 缺少 ##TOOL_CALL## 标记 — 可能导致上游拦截")
-        log.info(f"[上游] prompt 前 500 字预览: {prompt_content[:500]}")
+            log.warning("[Upstream] prompt missing QNML tool markers; upstream may block")
+        log.info(f"[Upstream] prompt preview first 500 chars: {prompt_content[:500]}")
 
         try:
             async for chunk_result in stream_fn(token, chat_id, payload):
